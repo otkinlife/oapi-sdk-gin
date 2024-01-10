@@ -25,9 +25,10 @@ import (
 	"github.com/larksuite/oapi-sdk-go/v3/event/dispatcher"
 )
 
-func doProcess(writer http.ResponseWriter, req *http.Request, reqHandler larkevent.IReqHandler, options ...larkevent.OptionFunc) {
+func doProcess(ctx *gin.Context, reqHandler larkevent.IReqHandler, options ...larkevent.OptionFunc) {
 	// 转换http请求对象为标准请求对象
-	ctx := context.Background()
+	req := ctx.Request
+	writer := ctx.Writer
 	eventReq, err := translate(ctx, req)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -50,14 +51,14 @@ func NewCardActionHandlerFunc(cardActionHandler *larkcard.CardActionHandler, opt
 	// 构建模板类
 	cardActionHandler.InitConfig(options...)
 	return func(c *gin.Context) {
-		doProcess(c.Writer, c.Request, cardActionHandler, options...)
+		doProcess(c, cardActionHandler, options...)
 	}
 }
 
 func NewEventHandlerFunc(eventDispatcher *dispatcher.EventDispatcher, options ...larkevent.OptionFunc) func(c *gin.Context) {
 	eventDispatcher.InitConfig(options...)
 	return func(c *gin.Context) {
-		doProcess(c.Writer, c.Request, eventDispatcher, options...)
+		doProcess(c, eventDispatcher, options...)
 	}
 }
 
